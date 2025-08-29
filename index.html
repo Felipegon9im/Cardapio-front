@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Gestão</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .fade-out {
+            transition: opacity 0.5s ease-out;
+            opacity: 0;
+        }
+        .progress-bar {
+            background: linear-gradient(to right, #4ade80, #16a34a);
+            transition: width 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Tela de Login -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-200 p-4">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Login do Gestor</h2>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Senha</label>
+                    <input type="password" id="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <button id="login-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" type="submit">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Painel Principal -->
+    <div id="main-panel" class="hidden">
+        <header class="bg-white shadow-md">
+            <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">Painel de Gestão</h1>
+                <button id="logout-button" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <i class="fas fa-sign-out-alt"></i><span class="hidden md:inline ml-2">Sair</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="container mx-auto p-4 md:p-6">
+            <!-- Abas -->
+            <div class="mb-6"><nav class="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto border-b border-gray-200" aria-label="Tabs">
+                <a href="#" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-blue-600 border-blue-500" data-tab="pedidos"><i class="fas fa-receipt mr-2"></i>Pedidos</a>
+                <a href="#" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="gestao"><i class="fas fa-cogs mr-2"></i>Gestão</a>
+                <a href="#" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="relatorio"><i class="fas fa-chart-line mr-2"></i>Relatórios</a>
+            </nav></div>
+
+            <!-- Conteúdo -->
+            <div id="pedidos" class="tab-content active">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Novos Pedidos</h2>
+                <div id="pedidos-container" class="space-y-4"><p id="no-orders-message" class="text-gray-500">Nenhum pedido em aberto.</p></div>
+            </div>
+            
+            <div id="gestao" class="tab-content">
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Gerir Cardápio</h2>
+                    <div id="cardapio-list" class="space-y-3 mb-6"></div>
+                    <h3 class="text-lg font-semibold mb-3 text-gray-700">Adicionar Novo Item</h3>
+                    <form id="add-item-form" class="space-y-4">
+                        <input type="text" id="item-name" placeholder="Nome do Item" class="w-full p-2 border rounded" required>
+                        <textarea id="item-description" placeholder="Descrição" class="w-full p-2 border rounded" required></textarea>
+                        <input type="number" id="item-price" placeholder="Preço" step="0.01" class="w-full p-2 border rounded" required>
+                        <div>
+                            <label for="item-image-file" class="block text-sm font-medium text-gray-700 mb-1">Imagem</label>
+                            <input type="file" id="item-image-file" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                        </div>
+                        <div id="upload-progress-container" class="w-full bg-gray-200 rounded-full h-2.5 hidden"><div id="upload-progress-bar" class="progress-bar h-2.5 rounded-full" style="width: 0%"></div></div>
+                        <button id="add-item-button" type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">Adicionar Item</button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Configurações da Loja</h2>
+                    <form id="config-form" class="space-y-4">
+                        <input type="text" id="store-name" placeholder="Nome da Loja" class="w-full p-2 border rounded">
+                        <input type="url" id="store-logo" placeholder="URL do Logo" class="w-full p-2 border rounded">
+                        <input type="text" id="store-whatsapp" placeholder="Nº de WhatsApp (ex: 5511999999999)" class="w-full p-2 border rounded">
+                        <input type="number" id="store-delivery-fee" placeholder="Taxa de Entrega" step="0.01" class="w-full p-2 border rounded">
+                        <input type="color" id="store-theme-color" class="w-full p-1 h-10 border rounded">
+                        <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full">Salvar Configurações</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="relatorio" class="tab-content">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Relatório de Vendas</h2>
+                <div class="mb-4"><label for="report-date" class="block text-sm font-medium text-gray-700">Selecione a Data:</label><input type="date" id="report-date" class="mt-1 block w-full p-2 border-gray-300 rounded-md"></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-500">Total Faturado</h3><p id="total-faturado" class="mt-1 text-3xl font-semibold text-gray-900">R$ 0,00</p></div>
+                    <div class="bg-white p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-500">Total em Pix</h3><p id="total-pix" class="mt-1 text-3xl font-semibold text-gray-900">R$ 0,00</p></div>
+                    <div class="bg-white p-4 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-500">Total em Cartão</h3><p id="total-cartao" class="mt-1 text-3xl font-semibold text-gray-900">R$ 0,00</p></div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="text-lg font-semibold mb-3 text-gray-700">Pedidos Concluídos</h3><div id="completed-orders-container"></div></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Edição de Item -->
+    <div id="edit-item-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center"><h2 class="text-xl font-bold">Editar Item</h2><button id="close-edit-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div>
+            <div class="p-6 overflow-y-auto">
+                <form id="edit-item-form" class="space-y-4">
+                    <input type="hidden" id="edit-item-id">
+                    <div><label for="edit-item-name" class="block text-sm font-medium text-gray-700">Nome</label><input type="text" id="edit-item-name" class="mt-1 w-full p-2 border rounded" required></div>
+                    <div><label for="edit-item-description" class="block text-sm font-medium text-gray-700">Descrição</label><textarea id="edit-item-description" class="mt-1 w-full p-2 border rounded" required></textarea></div>
+                    <div><label for="edit-item-price" class="block text-sm font-medium text-gray-700">Preço</label><input type="number" id="edit-item-price" step="0.01" class="mt-1 w-full p-2 border rounded" required></div>
+                    <div>
+                        <p class="block text-sm font-medium text-gray-700 mb-1">Imagem Atual</p>
+                        <img id="edit-current-image" src="" class="w-20 h-20 rounded-md object-cover mb-2">
+                        <label for="edit-item-image-file" class="block text-sm font-medium text-gray-700">Trocar Imagem (opcional)</label>
+                        <input type="file" id="edit-item-image-file" accept="image/*" class="mt-1 w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                    <div id="edit-upload-progress-container" class="w-full bg-gray-200 rounded-full h-2.5 hidden"><div id="edit-upload-progress-bar" class="progress-bar h-2.5 rounded-full" style="width: 0%"></div></div>
+                    <div class="flex justify-end space-x-4 pt-4">
+                        <button type="button" id="cancel-edit-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">Cancelar</button>
+                        <button id="save-item-button" type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyC08kGcRY7rWrDRbbbXZjrI7pffqsFTwDU",
+            authDomain: "cardapioonline-ce986.firebaseapp.com",
+            projectId: "cardapioonline-ce986",
+            storageBucket: "cardapioonline-ce986.appspot.com",
+            messagingSenderId: "851882063397",
+            appId: "1:851882063397:web:d61577093b176ef534b1cc"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        const notificationSound = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+
+        // --- Elementos da UI ---
+        const loginScreen = document.getElementById('login-screen');
+        const mainPanel = document.getElementById('main-panel');
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logout-button');
+        const pedidosContainer = document.getElementById('pedidos-container');
+        const noOrdersMessage = document.getElementById('no-orders-message');
+        const cardapioList = document.getElementById('cardapio-list');
+        const addItemForm = document.getElementById('add-item-form');
+        const configForm = document.getElementById('config-form');
+        const reportDateInput = document.getElementById('report-date');
+        const editItemModal = document.getElementById('edit-item-modal');
+        const completedOrdersContainer = document.getElementById('completed-orders-container');
+
+        let allCompletedOrders = [];
+
+        // --- AUTENTICAÇÃO E INICIALIZAÇÃO ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loginScreen.classList.add('hidden');
+                mainPanel.classList.remove('hidden');
+                initPanel();
+            } else {
+                loginScreen.classList.remove('hidden');
+                mainPanel.classList.add('hidden');
+            }
+        });
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            auth.signInWithEmailAndPassword(e.target.email.value, e.target.password.value)
+                .catch(err => alert("Email ou senha incorretos."));
+        });
+
+        logoutButton.addEventListener('click', () => auth.signOut());
+
+        function initPanel() {
+            listenToOpenOrders();
+            loadCardapio();
+            loadConfig();
+            setupFormListeners();
+            setupReportListeners();
+            fetchAllCompletedOrders();
+        }
+
+        // --- NAVEGAÇÃO POR ABAS ---
+        document.querySelectorAll('.tab-link').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.tab-link').forEach(item => item.classList.remove('text-blue-600', 'border-blue-500'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                e.currentTarget.classList.add('text-blue-600', 'border-blue-500');
+                document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
+            });
+        });
+
+        // --- GESTÃO DE PEDIDOS ---
+        function listenToOpenOrders() {
+            // CORREÇÃO: Removido o orderBy para evitar erro de índice
+            db.collection('pedidos').where('status', '==', 'aberto')
+            .onSnapshot(snapshot => {
+                noOrdersMessage.style.display = snapshot.empty ? 'block' : 'none';
+                
+                // Ordena as mudanças no lado do cliente para garantir que os mais novos fiquem em cima
+                const changes = snapshot.docChanges().sort((a, b) => {
+                    const timeA = a.doc.data().timestamp?.seconds || 0;
+                    const timeB = b.doc.data().timestamp?.seconds || 0;
+                    return timeB - timeA;
+                });
+
+                changes.forEach(change => {
+                    if (change.type === 'added') {
+                        // Evita adicionar um pedido que já está na tela
+                        if (!document.getElementById(`order-${change.doc.id}`)) {
+                            renderOrder(change.doc.id, change.doc.data());
+                            notificationSound.play().catch(()=>{});
+                        }
+                    }
+                    if (change.type === 'removed') {
+                         const orderCard = document.getElementById(`order-${change.doc.id}`);
+                         if(orderCard) {
+                            orderCard.classList.add('fade-out');
+                            setTimeout(() => orderCard.remove(), 500);
+                         }
+                    }
+                });
+            }, error => {
+                console.error("Erro no listener de pedidos: ", error);
+                pedidosContainer.innerHTML = `<p class="text-red-500 font-bold">Erro ao carregar pedidos. Verifique as regras de segurança do Firestore.</p>`;
+            });
+        }
+
+        function renderOrder(orderId, orderData) {
+            const itemsHtml = orderData.items.map(item => `<li>${item.quantity}x ${item.name}</li>`).join('');
+            const orderCard = document.createElement('div');
+            orderCard.id = `order-${orderId}`;
+            orderCard.className = 'bg-white p-4 md:p-6 rounded-lg shadow-md border-l-4 border-blue-500';
+            orderCard.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Pedido #${orderId.substring(0, 6)}</h3>
+                        <p class="text-sm text-gray-500">Recebido: ${new Date((orderData.timestamp?.seconds || 0) * 1000).toLocaleTimeString()}</p>
+                    </div>
+                    <span class="font-bold text-xl text-green-600">R$ ${(orderData.total || 0).toFixed(2)}</span>
+                </div>
+                <hr class="my-4">
+                <p><strong>Cliente:</strong> ${orderData.address.name}</p>
+                <p><strong>Endereço:</strong> ${orderData.address.street}, ${orderData.address.number} - ${orderData.address.neighborhood}</p>
+                <div class="mt-4"><h4 class="font-semibold">Itens:</h4><ul class="list-disc list-inside">${itemsHtml}</ul></div>
+                <div class="mt-6 flex justify-end">
+                    <button class="complete-order-btn bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" data-id="${orderId}">
+                        <i class="fas fa-check"></i> Concluir
+                    </button>
+                </div>`;
+            pedidosContainer.prepend(orderCard);
+        }
+
+        document.addEventListener('click', e => {
+            if (e.target && e.target.closest('.complete-order-btn')) {
+                const orderId = e.target.closest('.complete-order-btn').dataset.id;
+                db.collection('pedidos').doc(orderId).update({
+                    status: 'concluido',
+                    completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => fetchAllCompletedOrders());
+            }
+        });
+        
+        // --- GESTÃO DA LOJA (CARDÁPIO, CONFIG, EDIÇÃO) ---
+        function uploadImage(file, progressBar, progressContainer) {
+            return new Promise((resolve, reject) => {
+                const storageRef = storage.ref(`cardapio_images/${Date.now()}_${file.name}`);
+                const uploadTask = storageRef.put(file);
+                
+                progressContainer.classList.remove('hidden');
+
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        progressBar.style.width = progress + '%';
+                    }, 
+                    (error) => {
+                        console.error("Upload error: ", error);
+                        progressContainer.classList.add('hidden');
+                        reject(error);
+                    }, 
+                    () => {
+                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                            progressContainer.classList.add('hidden');
+                            progressBar.style.width = '0%';
+                            resolve(downloadURL);
+                        });
+                    }
+                );
+            });
+        }
+
+        function setupFormListeners() {
+            // Adicionar Item
+            addItemForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const fileInput = document.getElementById('item-image-file');
+                if (!fileInput.files[0]) { return alert('Selecione uma imagem.'); }
+
+                const button = e.target.querySelector('button');
+                button.disabled = true;
+                button.textContent = 'A enviar...';
+
+                try {
+                    const imageUrl = await uploadImage(fileInput.files[0], document.getElementById('upload-progress-bar'), document.getElementById('upload-progress-container'));
+                    await db.collection('cardapio').add({
+                        name: e.target['item-name'].value,
+                        description: e.target['item-description'].value,
+                        price: parseFloat(e.target['item-price'].value),
+                        imageUrl,
+                        available: true
+                    });
+                    addItemForm.reset();
+                    loadCardapio();
+                } catch (error) {
+                    alert('Erro ao adicionar item.');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Adicionar Item';
+                }
+            });
+
+            // Editar Item
+            document.getElementById('edit-item-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const itemId = e.target['edit-item-id'].value;
+                const fileInput = document.getElementById('edit-item-image-file');
+                const file = fileInput.files[0];
+
+                const button = e.target.querySelector('#save-item-button');
+                button.disabled = true;
+                button.textContent = 'A salvar...';
+
+                try {
+                    let imageUrl = document.getElementById('edit-current-image').src;
+                    if (file) {
+                        imageUrl = await uploadImage(file, document.getElementById('edit-upload-progress-bar'), document.getElementById('edit-upload-progress-container'));
+                    }
+                    await db.collection('cardapio').doc(itemId).update({
+                        name: e.target['edit-item-name'].value,
+                        description: e.target['edit-item-description'].value,
+                        price: parseFloat(e.target['edit-item-price'].value),
+                        imageUrl
+                    });
+                    editItemModal.classList.add('hidden');
+                    loadCardapio();
+                } catch (error) {
+                    alert('Erro ao salvar alterações.');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Salvar Alterações';
+                }
+            });
+
+            // Salvar Configurações
+            configForm.addEventListener('submit', e => {
+                e.preventDefault();
+                db.collection('config').doc('store').set({
+                    name: e.target['store-name'].value,
+                    logoUrl: e.target['store-logo'].value,
+                    whatsappNumber: e.target['store-whatsapp'].value,
+                    deliveryFee: parseFloat(e.target['store-delivery-fee'].value),
+                    themeColor: e.target['store-theme-color'].value
+                }).then(() => alert('Configurações salvas!'));
+            });
+        }
+        
+        function loadCardapio() {
+            db.collection('cardapio').get().then(snapshot => {
+                cardapioList.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const item = doc.data();
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded';
+                    itemEl.innerHTML = `
+                        <div class="flex items-center space-x-3 flex-1 min-w-0">
+                            <img src="${item.imageUrl}" class="w-12 h-12 rounded-md object-cover">
+                            <div class="min-w-0">
+                                <p class="font-semibold truncate">${item.name} - R$ ${(item.price || 0).toFixed(2)}</p>
+                                <p class="text-sm text-gray-600 truncate">${item.description}</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button class="edit-item-btn text-blue-500 hover:text-blue-700" data-id="${doc.id}"><i class="fas fa-pencil-alt"></i></button>
+                            <button class="delete-item-btn text-red-500 hover:text-red-700" data-id="${doc.id}"><i class="fas fa-trash"></i></button>
+                        </div>`;
+                    cardapioList.appendChild(itemEl);
+                });
+            });
+        }
+
+        cardapioList.addEventListener('click', async e => {
+            const editBtn = e.target.closest('.edit-item-btn');
+            const deleteBtn = e.target.closest('.delete-item-btn');
+            if (editBtn) {
+                const itemId = editBtn.dataset.id;
+                const doc = await db.collection('cardapio').doc(itemId).get();
+                if(doc.exists) {
+                    const item = doc.data();
+                    document.getElementById('edit-item-id').value = itemId;
+                    document.getElementById('edit-item-name').value = item.name;
+                    document.getElementById('edit-item-description').value = item.description;
+                    document.getElementById('edit-item-price').value = item.price;
+                    document.getElementById('edit-current-image').src = item.imageUrl;
+                    document.getElementById('edit-item-image-file').value = ''; 
+                    editItemModal.classList.remove('hidden');
+                }
+            }
+            if (deleteBtn) {
+                if (confirm('Tem a certeza?')) {
+                    db.collection('cardapio').doc(deleteBtn.dataset.id).delete().then(loadCardapio);
+                }
+            }
+        });
+
+        document.getElementById('close-edit-modal-btn').addEventListener('click', () => editItemModal.classList.add('hidden'));
+        document.getElementById('cancel-edit-btn').addEventListener('click', () => editItemModal.classList.add('hidden'));
+        
+        function loadConfig() {
+            db.collection('config').doc('store').get().then(doc => {
+                if (doc.exists) {
+                    const config = doc.data();
+                    document.getElementById('store-name').value = config.name || '';
+                    document.getElementById('store-logo').value = config.logoUrl || '';
+                    document.getElementById('store-whatsapp').value = config.whatsappNumber || '';
+                    document.getElementById('store-delivery-fee').value = config.deliveryFee || 0;
+                    document.getElementById('store-theme-color').value = config.themeColor || '#000000';
+                }
+            });
+        }
+
+        // --- RELATÓRIOS ---
+        function setupReportListeners() {
+            reportDateInput.valueAsDate = new Date();
+            reportDateInput.addEventListener('change', generateDailyReport);
+        }
+
+        function fetchAllCompletedOrders() {
+            db.collection('pedidos').where('status', '==', 'concluido').get()
+                .then(snapshot => {
+                    allCompletedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    generateDailyReport();
+                });
+        }
+        
+        function generateDailyReport() {
+            const selectedDate = reportDateInput.value;
+            if (!selectedDate) return;
+
+            const filteredOrders = allCompletedOrders.filter(order => (order.completedAt?.toDate()?.toISOString()?.split('T')[0] === selectedDate));
+            
+            let total = 0, totalPix = 0, totalCartao = 0;
+            completedOrdersContainer.innerHTML = ''; 
+
+            // CORREÇÃO: Mostra a mensagem de 'nenhum pedido' se o array estiver vazio
+            if (filteredOrders.length === 0) {
+                completedOrdersContainer.innerHTML = `<p id="no-completed-orders" class="text-gray-500">Nenhum pedido concluído para a data selecionada.</p>`;
+            } else {
+                filteredOrders.forEach(order => {
+                    const orderTotal = order.total || 0;
+                    total += orderTotal;
+                    if (order.paymentMethod === 'Pix') totalPix += orderTotal;
+                    else if (order.paymentMethod === 'Cartão') totalCartao += orderTotal;
+                    renderCompletedOrder(order);
+                });
+            }
+
+            document.getElementById('total-faturado').textContent = `R$ ${total.toFixed(2)}`;
+            document.getElementById('total-pix').textContent = `R$ ${totalPix.toFixed(2)}`;
+            document.getElementById('total-cartao').textContent = `R$ ${totalCartao.toFixed(2)}`;
+        }
+
+        function renderCompletedOrder(orderData) {
+            const completedAt = orderData.completedAt ? new Date(orderData.completedAt.seconds * 1000).toLocaleTimeString() : 'N/A';
+            const orderEl = document.createElement('div');
+            orderEl.className = 'border-b py-3';
+            orderEl.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold">Pedido #${orderData.id.substring(0, 6)} - ${orderData.address.name}</p>
+                        <p class="text-sm text-gray-600">Concluído: ${completedAt} - Pag.: ${orderData.paymentMethod}</p>
+                    </div>
+                    <span class="font-bold text-gray-800">R$ ${(orderData.total || 0).toFixed(2)}</span>
+                </div>`;
+            completedOrdersContainer.appendChild(orderEl);
+        }
+    </script>
+</body>
+</html>
+
